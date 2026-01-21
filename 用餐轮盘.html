@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>用餐决策转盘</title>
+    <script src="https://unpkg.com/lucky-canvas@1.7.2"></script>
+    <style>
+          /* 移动端样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            word-wrap: break-word;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        
+        .wheels-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 30px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        
+        .wheel-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .wheel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .wheel-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 15px;
+            border-bottom: 3px solid;
+        }
+        
+        .wheel-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        /* 每个转盘不同的颜色主题 */
+        #wheel-type .wheel-title { border-color: #667eea; color: #667eea; }
+        #wheel-type .wheel-card { border-top: 5px solid #667eea; }
+        
+        #wheel-bbq .wheel-title { border-color: #f093fb; color: #f093fb; }
+        #wheel-bbq .wheel-card { border-top: 5px solid #f093fb; }
+        
+        #wheel-local .wheel-title { border-color: #4facfe; color: #4facfe; }
+        #wheel-local .wheel-card { border-top: 5px solid #4facfe; }
+        
+        #wheel-hotpot .wheel-title { border-color: #ff6b6b; color: #ff6b6b; }
+        #wheel-hotpot .wheel-card { border-top: 5px solid #ff6b6b; }
+        
+        /* 转盘容器 */
+        .wheel-wrapper {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+        
+        .control-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .control-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .result-container {
+            text-align: center;
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .result-content {
+            font-size: 20px;
+            color: #667eea;
+            font-weight: bold;
+            padding: 15px;
+            background: linear-gradient(90deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .spin-all-btn {
+            background: linear-gradient(90deg, #ff6b6b 0%, #ff8e53 100%);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        @media (max-width: 1200px) {
+            .wheels-container {
+                grid-template-columns: 1fr;
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🍽️ 用餐决策助手</h1>
+        <p>点击每个转盘或使用下方按钮来决定今天的用餐选择</p>
+    </div>
+    
+    <h3>请输入用餐倾向（小数）：</h3>
+    
+    
+
+    <div class="input-row">
+        <input type="text" class="input-field" id="input1" placeholder="西餐">
+        <input type="text" class="input-field" id="input2" placeholder="快餐">
+        <input type="text" class="input-field" id="input3" placeholder="自助/烤肉">
+        <input type="text" class="input-field" id="input4" placeholder="地方菜">
+        <input type="text" class="input-field" id="input5" placeholder="自己做饭">
+        <input type="text" class="input-field" id="input6" placeholder="火锅">
+        <button id="collectBtnn" onclick="collectData()">数据上传</button>
+    </div>
+
+    
+    
+    <div class="wheels-container">
+        <!-- 用餐类型转盘 -->
+        <div class="wheel-card" id="wheel-type">
+            <div class="wheel-title">用餐类型</div>
+            <div class="wheel-description">选择主要的用餐形式</div>
+            <div id="type-wheel" class="wheel-wrapper"></div>
+        </div>
+        
+        <!-- 自助/烤肉转盘 -->
+        <div class="wheel-card" id="wheel-bbq">
+            <div class="wheel-title">自助/烤肉</div>
+            <div class="wheel-description">选择烧烤或自助类型</div>
+            <div id="bbq-wheel" class="wheel-wrapper"></div>
+        </div>
+        
+        <!-- 地方菜转盘 -->
+        <div class="wheel-card" id="wheel-local">
+            <div class="wheel-title">地方菜</div>
+            <div class="wheel-description">选择地方菜系</div>
+            <div id="local-wheel" class="wheel-wrapper"></div>
+        </div>
+        
+        <!-- 火锅转盘 -->
+        <div class="wheel-card" id="wheel-hotpot">
+            <div class="wheel-title">火锅</div>
+            <div class="wheel-description">选择火锅类型</div>
+            <div id="hotpot-wheel" class="wheel-wrapper"></div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="control-btn spin-all-btn" onclick="spinAllWheels()">🎲 全部旋转</button>
+        <button class="control-btn reset-btn" onclick="resetAllWheels()">🔄 重置选择</button>
+    </div>
+    
+    <div class="result-container" id="result-container" style="display: none;">
+        <div class="result-title">🎯 最终推荐</div>
+        <div class="result-content" id="final-result"></div>
+        <p style="color: #666; margin-top: 15px;">* 基于四个转盘的综合选择结果</p>
+    </div>
+
+    <script>
+        let westernFood = ''; // 西餐
+        let fastFood = '';    // 快餐
+        let bbqBuffet = '';   // 自助/烤肉
+        let localCuisine = ''; // 地方菜
+        let homeCooking = '';  // 自己做饭
+        let hotpot = '';       // 火锅
+
+        function collectData() {
+            westernFood = parseFloat (document.getElementById('input1').value); // 西餐
+            fastFood = parseFloat (document.getElementById('input2').value); // 快餐
+            bbqBuffet = parseFloat (document.getElementById('input3').value); // 自助/烤肉
+            localCuisine = parseFloat (document.getElementById('input4').value); // 地方菜
+            homeCooking = parseFloat (document.getElementById('input5').value); // 自己做饭
+            hotpot = parseFloat (document.getElementById('input6').value); // 火锅
+            alert('上传成功，请转动轮盘1')
+        }
+
+        
+        
+          
+        
+        
+
+        // 存储结果
+        const results = {
+            type: '',
+            bbq: '',
+            local: '',
+            hotpot: ''
+        };
+        
+        // 用餐类型转盘
+        const typeWheel = new LuckyCanvas.LuckyWheel('#type-wheel', {
+            
+            width: '300px',
+            height: '300px',
+            blocks: [{ 
+                padding: '10px', 
+                background: '#667eea',
+            }],
+            
+            prizes: [
+                { background: '#e6eeff', fonts: [{ text: '西餐', top: '40%', fontSize: '20px' }] },
+                { background: '#ccddff', fonts: [{ text: '快餐', top: '40%', fontSize: '20px' }] },
+                { background: '#e6eeff', fonts: [{ text: '自助/烤肉', top: '40%', fontSize: '20px' }]},
+                { background: '#ccddff', fonts: [{ text: '地方菜', top: '40%', fontSize: '20px' }]  },
+                { background: '#e6eeff', fonts: [{ text: '自己做饭', top: '40%', fontSize: '20px' }]  },
+                { background: '#ccddff', fonts: [{ text: '火锅', top: '40%', fontSize: '20px' }]},
+            ],
+            buttons: [
+                { radius: '40%', background: '#5568d4' },
+                { radius: '35%', background: '#8a9cff' },
+                { radius: '30%', background: '#667eea', pointer: true }
+            ],
+            start: function() {
+                typeWheel.play();
+                setTimeout(() => {
+                    randomValue = Math.random()
+                    console.log(westernFood + fastFood + bbqBuffet + localCuisine)
+                    console.log(fastFood)
+                    console.log(randomValue)
+                    if (randomValue <= westernFood) {
+                        prize = 0;
+                        console.log('西餐')
+                    } else if (randomValue <= (westernFood + fastFood)) {
+                        prize = 1;
+                        console.log('快餐')
+                    } else if (randomValue <= (westernFood + fastFood + bbqBuffet)) {
+                        prize = 2;
+                        console.log('自助/烤肉')
+                    } else if (randomValue <= (westernFood + fastFood + bbqBuffet + localCuisine)) {
+                        prize = 3;
+                        console.log('地方菜')
+                    } else if (randomValue <= (westernFood + fastFood + bbqBuffet + localCuisine + homeCooking)) {
+                        prize = 4;
+                        console.log('自己做饭')
+                    } else {
+                        prize = 5;
+                        console.log('火锅')
+                    }
+
+                    console.log("prize:",prize)
+                    typeWheel.stop(prize);
+                }, 1000);
+
+            },
+            end: function(prize) {
+                results.type = prize.fonts[0].text;
+                
+                if (results.type == '自助/烤肉'){
+                    bbqWheel.play()
+                    setTimeout(() => {
+                        const randomPrize = Math.floor(Math.random() * 6);
+                        bbqWheel.stop(randomPrize);
+                    }, 1000);
+                } else if (results.type == '地方菜'){
+                    localWheel.play()
+                    setTimeout(() => {
+                        const randomPrize = Math.floor(Math.random() * 9);
+                        localWheel.stop(randomPrize);
+                    }, 1000);
+                } else if (results.type == '火锅'){
+                    hotpotWheel.play()
+                    setTimeout(() => {
+                        const randomPrize = Math.floor(Math.random() * 7);
+                        hotpotWheel.stop(randomPrize);
+                    }, 1000);
+                }
+                updateResults();
+            }
+        });
+        
+        // 自助/烤肉转盘
+        const bbqWheel = new LuckyCanvas.LuckyWheel('#bbq-wheel', {
+            width: '300px',
+            height: '300px',
+            blocks: [{ 
+                padding: '10px', 
+                background: '#f093fb',
+            }],
+            prizes: [
+                { background: '#fce4ff', fonts: [{ text: '烤肉', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#f8d0ff', fonts: [{ text: '烤串', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#fce4ff', fonts: [{ text: '烤鱼', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#f8d0ff', fonts: [{ text: '海鲜自助', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#fce4ff', fonts: [{ text: '火锅自助', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#f8d0ff', fonts: [{ text: '烤肉自助', top: '40%', fontSize: '18px' }], range: 1 },
+            ],
+            buttons: [
+                { radius: '40%', background: '#d982e8' },
+                { radius: '35%', background: '#ffb1ff' },
+                { radius: '30%', background: '#f093fb', pointer: true }
+            ],
+            start: function() {
+                bbqWheel.play();
+                setTimeout(() => {
+                    const randomPrize = Math.floor(Math.random() * 6);
+                    bbqWheel.stop(randomPrize);
+                }, 1000);
+            },
+            end: function(prize) {
+                results.bbq = prize.fonts[0].text;
+                updateResults();
+            }
+        });
+        
+        // 地方菜转盘
+        const localWheel = new LuckyCanvas.LuckyWheel('#local-wheel', {
+            width: '300px',
+            height: '300px',
+            blocks: [{ 
+                padding: '10px', 
+                background: '#4facfe',
+            }],
+            prizes: [
+                { background: '#e6f4ff', fonts: [{ text: '川湘菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#cce9ff', fonts: [{ text: '粤菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#e6f4ff', fonts: [{ text: '江浙菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#cce9ff', fonts: [{ text: '东北菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#e6f4ff', fonts: [{ text: '西北菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#cce9ff', fonts: [{ text: '云南菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#e6f4ff', fonts: [{ text: '新疆菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#cce9ff', fonts: [{ text: '徽菜', top: '40%', fontSize: '20px' }], range: 1 },
+                { background: '#e6f4ff', fonts: [{ text: '农家菜', top: '40%', fontSize: '20px' }], range: 1 },
+            ],
+            buttons: [
+                { radius: '40%', background: '#3d9be8' },
+                { radius: '35%', background: '#7bc7ff' },
+                { radius: '30%', background: '#4facfe', pointer: true }
+            ],
+            start: function() {
+                localWheel.play();
+                setTimeout(() => {
+                    const randomPrize = Math.floor(Math.random() * 6);
+                    localWheel.stop(randomPrize);
+                }, 1000);
+            },
+            end: function(prize) {
+                results.local = prize.fonts[0].text;
+                updateResults();
+            }
+        });
+        
+        // 火锅转盘
+        const hotpotWheel = new LuckyCanvas.LuckyWheel('#hotpot-wheel', {
+            width: '300px',
+            height: '300px',
+            blocks: [{ 
+                padding: '10px', 
+                background: '#ff6b6b',
+            }],
+            prizes: [
+                { background: '#ffe6e6', fonts: [{ text: '川渝火锅', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#ffd1d1', fonts: [{ text: '老北京涮肉', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#ffe6e6', fonts: [{ text: '牛羊肉', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#ffd1d1', fonts: [{ text: '港式打边炉', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#ffe6e6', fonts: [{ text: '云南火锅', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#ffd1d1', fonts: [{ text: '羊蝎子火锅', top: '40%', fontSize: '18px' }], range: 1 },
+                { background: '#ffe6e6', fonts: [{ text: '鱼火锅', top: '40%', fontSize: '18px' }], range: 1 },
+            ],
+            buttons: [
+                { radius: '40%', background: '#e85a5a' },
+                { radius: '35%', background: '#ff8a8a' },
+                { radius: '30%', background: '#ff6b6b', pointer: true }
+            ],
+            start: function() {
+                hotpotWheel.play();
+                setTimeout(() => {
+                    const randomPrize = Math.floor(Math.random() * 6);
+                    hotpotWheel.stop(randomPrize);
+                }, 1000);
+            },
+            end: function(prize) {
+                results.hotpot = prize.fonts[0].text;
+                updateResults();
+            }
+        });
+        
+        // 更新结果显示
+        function updateResults() {
+            const resultContainer = document.getElementById('result-container');
+            const finalResult = document.getElementById('final-result');
+            
+            // 检查是否所有结果都已产生
+            const allSelected = Object.values(results).every(value => value !== '');
+            
+            if (allSelected) {
+                const recommendation = `建议您选择：${results.type} ${results.bbq || results.local || results.hotpot}`;
+                finalResult.textContent = recommendation;
+                resultContainer.style.display = 'block';
+                
+                // 平滑滚动到结果区域
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // 旋转所有转盘
+        function spinAllWheels() {
+            // 重置结果
+            Object.keys(results).forEach(key => results[key] = '');
+            document.getElementById('result-container').style.display = 'none';
+            
+            // 依次旋转所有转盘，每个间隔500ms
+            typeWheel.start();
+            setTimeout(() => bbqWheel.start(), 500);
+            setTimeout(() => localWheel.start(), 1000);
+            setTimeout(() => hotpotWheel.start(), 1500);
+        }
+        
+        // 重置所有转盘
+        function resetAllWheels() {
+            Object.keys(results).forEach(key => results[key] = '');
+            document.getElementById('result-container').style.display = 'none';
+            
+            // 可以在这里添加重置转盘状态的代码
+            alert('所有选择已重置，可以重新开始！');
+        }
+        
+        // 添加键盘快捷键
+        document.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case '1':
+                    typeWheel.start();
+                    break;
+                case '2':
+                    bbqWheel.start();
+                    break;
+                case '3':
+                    localWheel.start();
+                    break;
+                case '4':
+                    hotpotWheel.start();
+                    break;
+                case ' ':
+                    event.preventDefault();
+                    spinAllWheels();
+                    break;
+                case 'r':
+                case 'R':
+                    resetAllWheels();
+                    break;
+            }
+        });
+        
+        // 初始化页面时显示键盘帮助
+        window.onload = function() {
+            console.log('🎮 键盘快捷键：');
+            console.log('1-4: 旋转对应转盘');
+            console.log('空格: 旋转所有转盘');
+            console.log('R: 重置所有选择');
+        };
+    </script>
+</body>
+</html>
